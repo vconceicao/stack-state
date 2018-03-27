@@ -100,10 +100,21 @@ public class Component {
 		if(this.getOwnState()>=2){
 			this.devivedState = ownState;
 		}else{
-			if(this.dependsOn!=null){
+			if(this.dependsOn!=null && !dependsOn.isEmpty()){
+			//tranform components in a list
 			List<Component> components = this.dependsOn.stream().collect(Collectors.toList());
+			
+			//sort all components per its derived state and reverse it
 			components.sort(Comparator.comparing(Component::getDevivedState).reversed());
-			this.devivedState = components.get(0).getDevivedState();
+			
+			//get the highest one
+			int dependentHighestderivedState = components.get(0).getDevivedState();
+			
+			//check if the highest derived state is major or equal than warning
+			if (dependentHighestderivedState>=2) {
+				this.devivedState = dependentHighestderivedState;
+			}
+			
 			}
 		}
 	}

@@ -89,7 +89,7 @@ public class ComponentTest {
 	}
 
 	@Test
-	public void testCalculationOfDerivedStateWithNoData() {
+	public void testCalculationOfDerivedStateWithDependentsDerivedStateSettedNoData() {
 		
 		
 		
@@ -101,12 +101,37 @@ public class ComponentTest {
 		
 		Map<String, Integer> dbCheckState = new HashMap<>();
 		
-		dbCheckState.put("Another Usage", 2);
+		dbCheckState.put("Another Usage", 1);
 		Component db = new Component("db", dbCheckState);
 		
 		
 		app.dependsOn(db);
 		assertEquals(0, app.getDevivedState());
+		
+		
+		
+	}
+	
+	@Test
+	public void testCalculationOfDerivedStateWithComponentsDependentsOnEachOther() {
+		
+		
+		
+		Map<String, Integer> appCheckState = new HashMap<>();
+		
+		appCheckState.put("Another Usage", 0);
+		Component app = new Component("app", appCheckState);
+		
+		Map<String, Integer> dbCheckState = new HashMap<>();
+		
+		dbCheckState.put("Another Usage", 2);
+		Component db = new Component("db", dbCheckState);
+		
+		
+		app.dependsOn(db);
+		db.dependsOn(app);
+		assertEquals(2, app.getDevivedState());
+		assertEquals(2, db.getDevivedState());
 		
 		
 		
