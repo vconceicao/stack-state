@@ -112,26 +112,66 @@ public class ComponentTest {
 		
 	}
 	
+	
+	
 	@Test
 	public void testCalculationOfDerivedStateWithComponentsDependentsOnEachOther() {
 		
 		
-		
-		Map<String, Integer> appCheckState = new HashMap<>();
-		
-		appCheckState.put("Another Usage", 0);
-		Component app = new Component("app", appCheckState);
-		
-		Map<String, Integer> dbCheckState = new HashMap<>();
-		
-		dbCheckState.put("Another Usage", 2);
-		Component db = new Component("db", dbCheckState);
-		
-		
-		app.dependsOn(db);
-		db.dependsOn(app);
+				Map<String, Integer> appCheckState = new HashMap<>();
+				
+				appCheckState.put("CPU load", 0);
+				Component app = new Component("app", appCheckState);
+				
+				Map<String, Integer> dbCheckState = new HashMap<>();
+				
+				dbCheckState.put("CPU load", 2);
+				Component db = new Component("db", dbCheckState);
+				
+				
+				app.dependsOn(db);
+				db.dependsOn(app);
+				
+
+
 		assertEquals(2, app.getDevivedState());
 		assertEquals(2, db.getDevivedState());
+		
+		
+		
+	}
+	
+	
+	@Test
+	public void testCalculationOfDerivedStateWithCyclicDependency() {
+		
+		
+		
+		Map<String, Integer> component1CheckState = new HashMap<>();
+		
+		component1CheckState.put("Another Usage", 0);
+		Component component1 = new Component("app", component1CheckState);
+		
+		
+		Map<String, Integer> component2CheckState = new HashMap<>();
+		
+		component2CheckState.put("Another Usage", 1);
+		Component component2 = new Component("db", component2CheckState);
+		
+		
+		Map<String, Integer> component3CheckState = new HashMap<>();
+		
+		component3CheckState.put("RAM usage", 2);
+		Component component3 = new Component("db", component2CheckState);
+		
+		
+		
+		component1.dependsOn(component2);
+		component2.dependsOn(component3);
+		component3.dependsOn(component1);
+		assertEquals(2, component1.getDevivedState());
+		assertEquals(2, component2.getDevivedState());
+		assertEquals(2, component3.getDevivedState());
 		
 		
 		

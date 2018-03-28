@@ -15,7 +15,19 @@ public class Event {
 		this.checkStateId = checkStateId;
 		this.state = state;
 	}
-	
+	public int getTimeStamp() {
+		return timeStamp;
+	}
 			
+	public String getComponentId() {
+		return componentId;
+	}
 	
+	public String getCheckStateId() {
+		return checkStateId;
+	}
+	
+	public int getState() {
+		return state;
+	}
 }
