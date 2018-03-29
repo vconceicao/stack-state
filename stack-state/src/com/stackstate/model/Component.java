@@ -2,54 +2,64 @@ package com.stackstate.model;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
 public class Component {
 
 
-
+	@Expose
 	private String id;
+	
+	@Expose
+	@SerializedName("own_state")
 	private int ownState;
+	
+	@Expose
+	@SerializedName("derived_state")
 	private int devivedState;
-	private Map<String, Integer> checkState;
+	
+	@Expose
+	@SerializedName("check_states")
+	private Map<String, Integer> checkState = new HashMap<>();
+	
+	@Expose(serialize = false)
 	private Collection<Component> dependsOn = new  HashSet<>();
 	
+	@Expose
+	@SerializedName("depends_on")
+	private Collection<String> componentNamesDependsOn = new HashSet<>();
 	
+	
+	public Collection<String> getComponentNamesDependsOn() {
+		return componentNamesDependsOn;
+	}
+
+
 	public Collection<Component> getDependsOn() {
 		return dependsOn;
 	}
 
 
-	public void setDependsOn(Collection<Component> dependsOn) {
-		this.dependsOn = dependsOn;
-	}
-
-
-
-
-
-	public Component(String id,  Map<String, Integer> checkState) {
+	public Component(String id) {
 		this.id = id;
-		this.checkState = checkState;
-
-
-		
+		this.dependsOn = new HashSet<>();
 	}
 
 
 	private void calculateOwnState() {
-				List<Integer> states = this.checkState.values().stream().collect(Collectors.toList());
 				
 				if (checkState.values().size()==0) {
 					this.ownState = 0;
 				}else{
-				Collections.sort(states);
-				Collections.reverse(states);
-				this.ownState = states.get(0);
+				Integer max = Collections.max(checkState.values());
+				this.ownState = max;
 				}
 	}
 
@@ -72,28 +82,17 @@ public class Component {
 	}
 
 
-	public void setId(String id) {
-		this.id = id;
-	}
-
 
 	public int getOwnState() {
 		calculateOwnState();
-		
 		return ownState;
 		
 	}
 
 
-	public void setOwnState(int ownState) {
-		this.ownState = ownState;
-	}
 
 
 	public int getDevivedState() {
-		
-		
-		calculateDerivedState();
 		return devivedState;
 	}
 
@@ -101,29 +100,34 @@ public class Component {
 	private void calculateDerivedState() {
 		if(this.getOwnState()>=2){
 			this.devivedState = ownState;
+		}else if(getDependentHighestDerivedState()>=2){
+			this.devivedState = getDependentHighestDerivedState();
 		}else{
-			if(this.dependsOn!=null && !dependsOn.isEmpty()){
-			//tranform components in a list
-			List<Component> components = this.dependsOn.stream().collect(Collectors.toList());
-			
-			//sort all components per its derived state and reverse it
-			components.sort(Comparator.comparing(Component::getDevivedState).reversed());
-			
-			//get the highest one
-			int dependentHighestderivedState = components.get(0).getDevivedState();
-			
-			//check if the highest derived state is major or equal than warning
-			if (dependentHighestderivedState>=2) {
-				this.devivedState = dependentHighestderivedState;
-			}
-			
-			}
+			this.devivedState = 0;
 		}
 	}
 
 
-	public void setDevivedState(int devivedState) {
-		this.devivedState = devivedState;
+
+
+
+
+
+
+	private int getDependentHighestDerivedState() {
+		
+		if (!dependsOn.isEmpty()) {
+			
+		List<Integer> devivedStates = this.dependsOn.stream().map(Component::getDevivedState).collect(Collectors.toList());
+		
+		//get the highest one
+		int dependentHighestderivedState = Collections.max(devivedStates);
+		
+		//check if the highest derived state is major or equal than warning
+		return dependentHighestderivedState;
+		}else{
+			return -1;
+		}
 	}
 
 
@@ -131,15 +135,15 @@ public class Component {
 		return checkState;
 	}
 
-
-	public void setCheckState(Map<String, Integer> checkState) {
-		this.checkState = checkState;
+	private void setDerivedState(int derivedState) {
+		
+		this.devivedState = derivedState;
+		this.dependsOn.forEach(c->c.calculateDerivedState());
 	}
 
-
-	public void dependsOn(Component db) {
-
-		this.dependsOn.add(db);
+	public void dependsOn(Collection<Component> components) {
+		
+		this.dependsOn = components;
 	}
 	
 	
@@ -173,8 +177,13 @@ public class Component {
 	public void calculateStates(String checkStateId, int state) {
 
 		this.getCheckState().put(checkStateId, state);
-		this.getOwnState();
-		this.getDevivedState();
+		calculateDerivedState();
+		
+		//propagating derived state
+		if (this.devivedState>=2 && !dependsOn.isEmpty()) {
+			this.dependsOn.forEach(c -> c.setDerivedState(this.devivedState));
+		}
+
 	}
 
 

@@ -1,19 +1,32 @@
 package com.stackstate.model;
 
 import java.util.Collection;
-import java.util.Collections;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import com.google.gson.annotations.Expose;
 
 public class Graph {
 
-	
+	@Expose
 	private Collection<Component> components;
 
 	public Graph(Collection<Component> components) {
 		this.components = components;
 	}
-	
+
 	public Collection<Component> getComponents() {
-		return Collections.unmodifiableCollection(components) ;
+		return components;
+	}
+
+	public Map<String, Component> getComponentsMap() {
+		return getComponents().stream().collect(Collectors.toMap(Component::getId, c -> c));
+
+	}
+
+	@Override
+	public String toString() {
+		return "Graph [components=" + components + "]";
 	}
 
 	@Override

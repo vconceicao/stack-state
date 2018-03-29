@@ -1,11 +1,8 @@
 package com.stackstate.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.Collections;
 
 import org.junit.Test;
 
@@ -17,14 +14,14 @@ public class ComponentTest {
 	public void testCalculationOfOwnState() {
 
 		
-		Map<String, Integer> checkState = new HashMap<>();
 		
-		checkState.put("CPU load", 1);
-		checkState.put("RAM Usage", 0);
-		checkState.put("Anther Usage", 2);
 		
-		Component component = new Component("app", checkState);
-	
+		Component component = new Component("app");
+		component.calculateStates("CPU load", 1);
+		component.calculateStates("RAM Usage", 0);
+		component.calculateStates("Anther Usage", 2);
+		
+		
 		assertEquals(2, component.getOwnState());
 		
 	}
@@ -33,10 +30,9 @@ public class ComponentTest {
 	public void testCalculationOfOwnStateWithZeroCheckStates() {
 		
 		
-		Map<String, Integer> checkState = new HashMap<>();
 		
 		
-		Component component = new Component("app", checkState);
+		Component component = new Component("app");
 		
 		assertEquals(0, component.getOwnState());
 		
@@ -47,12 +43,10 @@ public class ComponentTest {
 	public void testCalculationOfDerivedStateBasedInOwnState() {
 		
 		
-		Map<String, Integer> checkState = new HashMap<>();
 		
-		checkState.put("Another Usage", 2);
 		
-		Component component = new Component("app", checkState);
-
+		Component component = new Component("app");
+		component.calculateStates("Another Usage", 2);
 		
 		assertEquals(2, component.getDevivedState());
 		
@@ -65,47 +59,39 @@ public class ComponentTest {
 		
 		
 		
-		Map<String, Integer> appCheckState = new HashMap<>();
 		
-		appCheckState.put("Another Usage", 0);
-		Component app = new Component("app", appCheckState);
-
+		Component app = new Component("app");
+		Component db = new Component("db");
 		
-		Map<String, Integer> dbCheckState = new HashMap<>();
+		app.dependsOn(Collections.singleton(db));
+		db.dependsOn(Collections.singleton(app));
 		
-		dbCheckState.put("Another Usage", 2);
-		Component db = new Component("db", dbCheckState);
-		
-		Set<Component> hashSet = new HashSet<>();
-		hashSet.add(db);
-		
-		app.setDependsOn(hashSet);
-		
+		db.calculateStates("Another Usage", 0);
+		db.calculateStates("Another Usage", 2);
 		
 		assertEquals(2, app.getDevivedState());
 		
 		
 		
 	}
+	
 
 	@Test
 	public void testCalculationOfDerivedStateWithDependentsDerivedStateSettedNoData() {
 		
 		
 		
-		Map<String, Integer> appCheckState = new HashMap<>();
 		
-		appCheckState.put("Another Usage", 0);
-		Component app = new Component("app", appCheckState);
+		Component app = new Component("app");
 		
 		
-		Map<String, Integer> dbCheckState = new HashMap<>();
 		
-		dbCheckState.put("Another Usage", 1);
-		Component db = new Component("db", dbCheckState);
+		Component db = new Component("db");
+		app.dependsOn(Collections.singleton(db));
 		
 		
-		app.dependsOn(db);
+		app.calculateStates("Another Usage", 0);
+		db.calculateStates("Another Usage", 1);
 		assertEquals(0, app.getDevivedState());
 		
 		
@@ -118,25 +104,19 @@ public class ComponentTest {
 	public void testCalculationOfDerivedStateWithComponentsDependentsOnEachOther() {
 		
 		
-				Map<String, Integer> appCheckState = new HashMap<>();
 				
-				appCheckState.put("CPU load", 0);
-				Component app = new Component("app", appCheckState);
-				
-				Map<String, Integer> dbCheckState = new HashMap<>();
-				
-				dbCheckState.put("CPU load", 2);
-				Component db = new Component("db", dbCheckState);
+				Component app = new Component("app");
+				Component db = new Component("db");
 				
 				
-				app.dependsOn(db);
-				db.dependsOn(app);
+				app.dependsOn(Collections.singleton(db));
+				db.dependsOn(Collections.singleton(app));
 				
+				app.calculateStates("CPU load", 0);
+				db.calculateStates("CPU load", 2);
 
-
-		assertEquals(2, app.getDevivedState());
-		assertEquals(2, db.getDevivedState());
-		
+				assertEquals(2, app.getDevivedState());
+				assertEquals(2, db.getDevivedState());
 		
 		
 	}
@@ -147,28 +127,21 @@ public class ComponentTest {
 		
 		
 		
-		Map<String, Integer> component1CheckState = new HashMap<>();
 		
-		component1CheckState.put("Another Usage", 0);
-		Component component1 = new Component("app", component1CheckState);
-		
-		
-		Map<String, Integer> component2CheckState = new HashMap<>();
-		
-		component2CheckState.put("Another Usage", 1);
-		Component component2 = new Component("db", component2CheckState);
+		Component component1 = new Component("app");
+		Component component2 = new Component("db" );
+		Component component3 = new Component("server");
 		
 		
-		Map<String, Integer> component3CheckState = new HashMap<>();
+		component1.dependsOn(Collections.singleton(component2));
+		component2.dependsOn(Collections.singleton(component3));
+		component3.dependsOn(Collections.singleton(component1));
 		
-		component3CheckState.put("RAM usage", 2);
-		Component component3 = new Component("db", component2CheckState);
+		component1.calculateStates("RAM usage",1);
+		component2.calculateStates("RAM usage", 0);
+		component3.calculateStates("RAM usage", 2);
 		
 		
-		
-		component1.dependsOn(component2);
-		component2.dependsOn(component3);
-		component3.dependsOn(component1);
 		assertEquals(2, component1.getDevivedState());
 		assertEquals(2, component2.getDevivedState());
 		assertEquals(2, component3.getDevivedState());
@@ -176,5 +149,23 @@ public class ComponentTest {
 		
 		
 	}
+	
+	@Test
+	public void testCalculationOfDerivedStateDependsOnItself(){
+		
+		
+		
+		
+		Component component1 = new Component("app");
+		component1.dependsOn(Collections.singleton(component1));
+		
+		
 
+		
+		component1.calculateStates("RAM usage",2);
+		assertEquals(2, component1.getDevivedState());
+		
+		
+		
+	}
 }

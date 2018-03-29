@@ -2,9 +2,7 @@ package com.stackstate.model.test;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 
 import org.junit.Test;
 
@@ -19,20 +17,16 @@ public class ProccessGraphTest {
 	public void testProccessGraphWithOneEvent() {
 
 		//creating components
-		Map<String, Integer> appCheckState = new HashMap<>();
 		
-		appCheckState.put("CPU load", 0);
-		Component app = new Component("app", appCheckState);
-		
-		Map<String, Integer> dbCheckState = new HashMap<>();
-		
-		dbCheckState.put("CPU load", 0);
-		Component db = new Component("db", dbCheckState);
+		Component app = new Component("app");
+		Component db = new Component("db");
 		
 		
-		app.dependsOn(db);
-		db.dependsOn(app);
+		app.dependsOn(Collections.singleton(db));
+		db.dependsOn(Collections.singleton(app));
 		
+		app.calculateStates("CPU load", 0);
+		db.calculateStates("CPU load", 0);
 		
 		Collection<Component> components = new HashSet<>();
 		Collections.addAll(components, app, db);

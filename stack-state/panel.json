@@ -1,0 +1,28 @@
+{
+  "graph": {
+    "components": [
+      {
+        "id": "db",
+        "own_state": 0,
+        "derived_state": 0,
+        "check_states": {
+          "CPU load": 0
+        },
+        "depends_on": [
+          "app"
+        ]
+      },
+      {
+        "id": "app",
+        "own_state": 0,
+        "derived_state": 0,
+        "check_states": {
+          "CPU load": 0
+        },
+        "depends_on": [
+          "db"
+        ]
+      }
+    ]
+  }
+}
