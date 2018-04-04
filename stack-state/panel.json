@@ -1,28 +1,47 @@
 {
-  "graph": {
-    "components": [
-      {
-        "id": "db",
-        "own_state": 0,
-        "derived_state": 0,
-        "check_states": {
-          "CPU load": 0
-        },
-        "depends_on": [
-          "app"
-        ]
-      },
-      {
-        "id": "app",
-        "own_state": 0,
-        "derived_state": 0,
-        "check_states": {
-          "CPU load": 0
-        },
-        "depends_on": [
-          "db"
-        ]
-      }
-    ]
-  }
+	"graph": {
+		"components": [
+			{
+				"id": "app",
+				"own_state": "no_data",
+				"derived_state": "no_data",
+				"check_states": {
+					"CPU load": "no_data",
+					"RAM usage": "no_data"
+				},
+				"depends_on": [
+					"db",
+					"server"
+				]
+			},
+			{
+				"id": "db",
+				"own_state": "no_data",
+				"derived_state": "no_data",
+				"check_states": {
+					"CPU load": "no_data",
+					"RAM usage": "no_data"
+				},
+				"dependency_of": [
+					"app",
+					"server"
+				]
+			},
+			{
+				"id": "server",
+				"own_state": "no_data",
+				"derived_state": "no_data",
+				"check_states": {
+					"CPU load": "no_data",
+					"RAM usage": "no_data"
+				},
+					"depends_on": [
+					"db"
+					],
+				"dependency_of": [
+					"app"
+				]
+			}
+		]
+	}
 }

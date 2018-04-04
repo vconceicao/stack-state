@@ -13,8 +13,14 @@ public class JsonUtils {
 
 	public static String exportJson(Object object) {
 
-		String json = gson.toJson(object);
+		//put this in the jsontutils method
+	 gson = new GsonBuilder()
+			     .enableComplexMapKeySerialization()
+			     .excludeFieldsWithoutExposeAnnotation()
+			     .setPrettyPrinting()
+			     .create();
 
+	 String json = gson.toJson(object);
 		return json;
 
 	}
@@ -29,7 +35,6 @@ public class JsonUtils {
 		Gson gsonRead = new GsonBuilder()
 			     .enableComplexMapKeySerialization()
 			     .excludeFieldsWithoutExposeAnnotation()
-			     .serializeNulls()
 			     .setPrettyPrinting()
 			     .create();
 		try (Reader reader = new FileReader(jsonfile)) {

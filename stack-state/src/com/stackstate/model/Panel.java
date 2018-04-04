@@ -2,6 +2,7 @@ package com.stackstate.model;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -27,11 +28,41 @@ public class Panel {
 		return this.graph;
 	}
 
-	public List<Component> findDependencies(Component co) {
-		Map<Collection<String>, List<Component>> collect = this.graph.getComponents().stream()
-				.collect(Collectors.groupingBy(Component::getComponentNamesDependsOn));
-		List<Component> dependecies = collect.get(Collections.singletonList(co.getId()));
-		return dependecies;
+	private Collection<Component> findComponentsDependsOn(Component c) {
+
+		Collection<Component> components = new HashSet<>();
+
+		for (String componentId : c.getComponentNamesDependsOn()) {
+			Component component = this.getGraph().getComponentsMap().get(componentId);
+			components.add(component);
+		}
+		return components;
+
+	}
+
+	public void build() {
+		
+		this.graph.getComponents().stream().filter(c -> c.getComponentNamesDependencyOf() != null)
+				.forEach(c -> c.dependencyOf(findComponentDependenciesOf(c)));
+		
+		this.graph.getComponents().stream().filter(c -> c.getComponentNamesDependsOn() != null)
+				.forEach(c -> c.dependsOn(findComponentsDependsOn(c)));
+	}
+
+	private Collection<Component> findComponentDependenciesOf(Component c) {
+		Collection<Component> components = new HashSet<>();
+
+		if (c.getComponentNamesDependencyOf() != null) {
+
+			for (String componentId : c.getComponentNamesDependencyOf()) {
+				Component component = this.getGraph().getComponentsMap().get(componentId);
+				components.add(component);
+			}
+
+			return components;
+		} else {
+			return null;
+		}
 	}
 
 }

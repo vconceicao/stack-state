@@ -21,12 +21,10 @@ public class ProccessGraph {
 		Map<String, Component> map = graph.getComponents().stream().collect(Collectors.toMap(Component:: getId, c->c));
 
 		//iterating eventList
-		Collection<Component> components = new HashSet<>();
 		
 		for (Event event : eventList) {
 			 
 			//getting a component from a map
-			if (map.get(event.getComponentId())!=null) {
 				Component component = map.get(event.getComponentId()); 
 						
 				//setting the new check state
@@ -34,15 +32,11 @@ public class ProccessGraph {
 				
 				
 				
-				//adding the component to a collection
-				components.add(component);
 				
-			}
 		}
 		
 		
-		Graph graph2 = new Graph(components);
-		return graph2;
+		return graph;
 		
 	}
 

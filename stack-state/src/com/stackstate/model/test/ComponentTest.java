@@ -7,6 +7,7 @@ import java.util.Collections;
 import org.junit.Test;
 
 import com.stackstate.model.Component;
+import com.stackstate.model.StateEnum;
 
 public class ComponentTest {
 
@@ -17,12 +18,12 @@ public class ComponentTest {
 		
 		
 		Component component = new Component("app");
-		component.calculateStates("CPU load", 1);
-		component.calculateStates("RAM Usage", 0);
-		component.calculateStates("Anther Usage", 2);
+		component.calculateStates("CPU load", StateEnum.CLEAR);
+		component.calculateStates("RAM Usage", StateEnum.NO_DATA);
+		component.calculateStates("Anther Usage", StateEnum.WARNING);
 		
 		
-		assertEquals(2, component.getOwnState());
+		assertEquals(StateEnum.WARNING, component.getOwnState());
 		
 	}
 	
@@ -34,7 +35,7 @@ public class ComponentTest {
 		
 		Component component = new Component("app");
 		
-		assertEquals(0, component.getOwnState());
+		assertEquals(StateEnum.NO_DATA, component.getOwnState());
 		
 	}
 	
@@ -46,9 +47,9 @@ public class ComponentTest {
 		
 		
 		Component component = new Component("app");
-		component.calculateStates("Another Usage", 2);
+		component.calculateStates("Another Usage", StateEnum.WARNING);
 		
-		assertEquals(2, component.getDevivedState());
+		assertEquals(StateEnum.WARNING, component.getDevivedState());
 		
 		
 		
@@ -64,36 +65,34 @@ public class ComponentTest {
 		Component db = new Component("db");
 		
 		app.dependsOn(Collections.singleton(db));
-		db.dependsOn(Collections.singleton(app));
+		db.dependencyOf(Collections.singleton(app));
 		
-		db.calculateStates("Another Usage", 0);
-		db.calculateStates("Another Usage", 2);
+		db.calculateStates("Another Usage", StateEnum.NO_DATA);
+		db.calculateStates("Another Usage", StateEnum.WARNING);
 		
-		assertEquals(2, app.getDevivedState());
+		assertEquals(StateEnum.WARNING, app.getDevivedState());
 		
 		
 		
 	}
 	
 
-	@Test
 	public void testCalculationOfDerivedStateWithDependentsDerivedStateSettedNoData() {
 		
 		
 		
 		
 		Component app = new Component("app");
-		
-		
-		
 		Component db = new Component("db");
+		
+		
+		
 		app.dependsOn(Collections.singleton(db));
+		db.dependencyOf(Collections.singleton(app));
 		
+		db.calculateStates("Another Usage", StateEnum.NO_DATA);
 		
-		app.calculateStates("Another Usage", 0);
-		db.calculateStates("Another Usage", 1);
-		assertEquals(0, app.getDevivedState());
-		
+		assertEquals(StateEnum.NO_DATA, app.getDevivedState());
 		
 		
 	}
@@ -110,13 +109,12 @@ public class ComponentTest {
 				
 				
 				app.dependsOn(Collections.singleton(db));
-				db.dependsOn(Collections.singleton(app));
+				db.dependencyOf(Collections.singleton(app));
 				
-				app.calculateStates("CPU load", 0);
-				db.calculateStates("CPU load", 2);
+				db.calculateStates("CPU load", StateEnum.WARNING);
 
-				assertEquals(2, app.getDevivedState());
-				assertEquals(2, db.getDevivedState());
+				assertEquals(StateEnum.WARNING, app.getDevivedState());
+				assertEquals(StateEnum.WARNING, db.getDevivedState());
 		
 		
 	}
@@ -127,23 +125,23 @@ public class ComponentTest {
 		
 		
 		
-		
+		//review this test
 		Component component1 = new Component("app");
 		Component component2 = new Component("db" );
 		Component component3 = new Component("server");
 		
 		
 		component1.dependsOn(Collections.singleton(component2));
-		component2.dependsOn(Collections.singleton(component3));
-		component3.dependsOn(Collections.singleton(component1));
+		component1.dependsOn(Collections.singleton(component3));
+		component2.dependencyOf(Collections.singleton(component3));
+		component3.dependencyOf(Collections.singleton(component1));
 		
-		component1.calculateStates("RAM usage",1);
-		component2.calculateStates("RAM usage", 0);
-		component3.calculateStates("RAM usage", 2);
+		component1.calculateStates("RAM usage",StateEnum.CLEAR);
+		component2.calculateStates("RAM usage", StateEnum.NO_DATA);
+		component3.calculateStates("RAM usage", StateEnum.WARNING);
 		
 		
 		assertEquals(2, component1.getDevivedState());
-		assertEquals(2, component2.getDevivedState());
 		assertEquals(2, component3.getDevivedState());
 		
 		
@@ -162,8 +160,8 @@ public class ComponentTest {
 		
 
 		
-		component1.calculateStates("RAM usage",2);
-		assertEquals(2, component1.getDevivedState());
+		component1.calculateStates("RAM usage",StateEnum.WARNING);
+		assertEquals(StateEnum.WARNING, component1.getDevivedState());
 		
 		
 		

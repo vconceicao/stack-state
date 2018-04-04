@@ -1,37 +1,38 @@
 package com.stackstate.model.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.stackstate.model.AlertCheck;
 import com.stackstate.model.Component;
 import com.stackstate.model.Event;
 import com.stackstate.model.Graph;
 import com.stackstate.model.JsonUtils;
 import com.stackstate.model.Panel;
+import com.stackstate.model.StateEnum;
 
 public class JsonUtilsTest {
 
 	@Test
+	@Ignore
 	public void testExportingToJson() {
 
 		String json = "{\"id\":\"app\",\"own_state\":1,\"derived_state\":0,\"check_states\":{\"RAM usage\":1},\"depends_on\":[]}";
 
 
 		Component component1 = new Component("app");
-		component1.calculateStates("RAM usage", 1);
+		component1.calculateStates("RAM usage", StateEnum.CLEAR);
 
 		String exportJson = JsonUtils.exportJson(component1);
 
@@ -46,13 +47,15 @@ public class JsonUtilsTest {
 
 
 		Component component1 = new Component("app");
-		component1.calculateStates("RAM usage", 1);
+		component1.calculateStates("RAM usage", StateEnum.CLEAR);
 
 		Component component = JsonUtils.importJson(json, Component.class);
 
 		assertEquals("app", component.getId());
 
 	}
+	
+	
 
 	@Test
 	public void testReadingJsonFromAFile() throws IOException {
@@ -64,19 +67,22 @@ public class JsonUtilsTest {
 		Component component = JsonUtils.readJson("component.json", Component.class);
 		Event event = JsonUtils.readJson("event.json", Event.class);
 		Panel panel = JsonUtils.readJson("panel.json", Panel.class);
+		AlertCheck alert = JsonUtils.readJson("alertcheck.json", AlertCheck.class);
 		
 		
 		
 		
-		panel.getGraph().getComponents().forEach(c-> c.dependsOn(panel.findDependencies(c)));
+		panel.build();
 		
 		
+		Collection<Event> events = alert.getEvents();
 		
 		
 		
 		System.out.println(panel);
 		assertEquals("app", component.getId());
-		assertEquals("db", event.getComponentId());
+		assertEquals("app", event.getComponentId());
+		assertTrue(events.contains(event));
 		
 		
 	}
@@ -89,50 +95,57 @@ public class JsonUtilsTest {
 		
 				Component app = new Component("app");
 				Component db = new Component("db");
+				Component server = new Component("server");
 				
 				
 				app.dependsOn(Collections.singleton(db));
-				db.dependsOn(Collections.singleton(app));
+				db.dependencyOf(Collections.singleton(app));
 				
-				app.calculateStates("CPU load", 0);
-				db.calculateStates("CPU load", 0);
+				db.calculateStates("CPU load", StateEnum.NO_DATA);
 				
 				Collection<Component> components = new ArrayList<>();
 				components.add(db);
 				components.add(app);
+				components.add(server);
 				
 				//creating a graph
 				Graph graph = new Graph(components);
 				Panel panel = new Panel(graph);
 				
 				
-				//put this in the jsontutils method
-				Gson gson = new GsonBuilder()
-					     .enableComplexMapKeySerialization()
-					     .excludeFieldsWithoutExposeAnnotation()
-					     .serializeNulls()
-					     .setPrettyPrinting()
-					     .create();
 				
-				String json = gson.toJson(panel);
+				
+				String json = JsonUtils.exportJson(panel);
 				System.out.println(json);
 				
-				
-//				//creating events
-//				Event event1 = new Event("db", 1, "CPU load", 2);
-//				Event event2 = new Event("app", 2, "CPU load", 1);
-//			
-//				Collection<Event> events = new HashSet<>();
-//				Collections.addAll(events, event1, event2);
-//				
-//
-//				ProccessGraph proccessGraph = new ProccessGraph();
-//				
-//				Graph newGraph = proccessGraph.proccess(graph, events);
-//				
-//				
-				
-				
+			
+		
+	}
+	
+	@Test
+	public void testExportStatesToJson() throws IOException {
+		
+		//creating components
+		
+
+		
+		String exportJson = JsonUtils.exportJson(StateEnum.NO_DATA);
+		
+		assertEquals("\"no_data\"", exportJson);
+
+		
+	}
+	
+	@Test
+	public void testImportStatesToJson() throws IOException {
+		
+		//creating components
+		
+		
+		
+		StateEnum importJson = JsonUtils.importJson("\"no_data\"", StateEnum.class);
+		
+		System.out.println(importJson);
 		
 	}
 
