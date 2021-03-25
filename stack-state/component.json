@@ -1,9 +1,0 @@
-{
-"id": "app",
-"own_state": 0,
-"devived_state": 0,
-"check_states": {
-"CPU load": 0,
-"RAM usage": 0
-}
-}
